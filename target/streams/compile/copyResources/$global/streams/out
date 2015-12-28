@@ -1,0 +1,3 @@
+[0m[[0mdebug[0m] [0mCopy resource mappings: [0m
+[0m[[0mdebug[0m] [0m	(/home/alek/Git/sfdc-heroku-remotetasks/sfdc-heroku-remotetasks/conf/routes,/home/alek/Git/sfdc-heroku-remotetasks/sfdc-heroku-remotetasks/target/scala-2.11/classes/routes)[0m
+[0m[[0mdebug[0m] [0m	(/home/alek/Git/sfdc-heroku-remotetasks/sfdc-heroku-remotetasks/conf/application.conf,/home/alek/Git/sfdc-heroku-remotetasks/sfdc-heroku-remotetasks/target/scala-2.11/classes/application.conf)[0m

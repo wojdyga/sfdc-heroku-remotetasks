@@ -1,0 +1,6 @@
+{
+  "name": "Remote tasks",
+  "description": "Remote tasks app for SFDC Academy on Heroku",
+  "image": "heroku/scala",
+  "addons": [ "heroku-postgresql" ]
+}
