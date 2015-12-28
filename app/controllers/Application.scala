@@ -31,17 +31,26 @@ object Application extends Controller {
     try {
       val stmt = conn.createStatement
 
-      stmt.executeUpdate("CREATE TABLE IF NOT EXISTS ticks (tick timestamp)")
-      stmt.executeUpdate("INSERT INTO ticks VALUES (now())")
-
-      val rs = stmt.executeQuery("SELECT tick FROM ticks")
-
-      while (rs.next) {
-        out += "Read from DB: " + rs.getTimestamp("tick") + "\n"
-      }
+      stmt.executeUpdate("CREATE TABLE Secrets (ClientSecret VARCHAR(256) UNIQUE NOT NULL, Description VARCHAR(1000) NOT NULL)")
+      stmt.executeUpdate("CREATE TABLE RemoteTask (URL VARCHAR(2000) NOT NULL, Created TIMESTAMP, Resolved TIMESTAMP, IsResolved BOOLEAN, ClientSecret VARCHAR(256) REFERENCES Secrets(ClientSecret))")
     } finally {
       conn.close()
     }
     Ok(out)
   }
 }
+/*
+CREATE TABLE Secrets (
+ClientSecret VARCHAR(256) UNIQUE NOT NULL,
+Description VARCHAR(1000) NOT NULL
+);
+
+CREATE TABLE RemoteTask (
+URL VARCHAR(2000) NOT NULL,
+Created TIMESTAMP,
+Resolved TIMESTAMP,
+IsResolved BOOLEAN,
+ClientSecret VARCHAR(256) REFERENCES Secrets(ClientSecret)
+);
+*/
+

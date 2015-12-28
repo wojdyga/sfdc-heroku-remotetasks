@@ -7,6 +7,7 @@ GET     /                           controllers.Application.index
 POST    /tasks                      controllers.Application.postTask
 GET     /tasks/all                  controllers.Application.getAllTaskIds
 GET     /tasks/:id                  controllers.Application.getTask(id: Long)
+GET     /db                         controllers.Application.db
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
