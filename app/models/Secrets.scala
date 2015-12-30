@@ -9,7 +9,7 @@ class Secrets(tag: Tag) extends Table[Secret](tag, "SECRETS") {
   def description = column[String]("Description")
   // the * projection (e.g. select * ...) auto-transforms the tupled
   // column values to / from a User
-  def * = (clientSecret, description.?) <> (User.tupled, User.unapply)
+  def * = (clientSecret, description.?) <> (Secret.tupled, Secret.unapply)
 }
 
 object Secrets {

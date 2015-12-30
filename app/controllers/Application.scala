@@ -7,6 +7,12 @@ import play.api.Play.current
 
 import play.api.db._
 
+import play.api.data._
+import play.api.data.Forms._
+import scala.slick.driver.PostgresDriver.simple._
+import models.Secret
+import models.Secrets
+
 object Application extends Controller {
 
   def index = Action {
