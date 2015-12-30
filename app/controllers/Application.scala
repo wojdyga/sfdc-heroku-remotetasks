@@ -17,8 +17,13 @@ object Application extends Controller {
     Ok(views.html.index("POST Task successfull"))
   }
 
-  def getAllTaskIds = Action {
-    Ok(views.html.index("GET All Task Ids successfull"))
+  def getAllTaskIds = Action(parse.json) { request =>
+    (request.body \ "secret").asOpt[String].map { secret =>
+      val desc = Secrets.find(secret).description
+      Ok("Hello " + desc)
+    }.getOrElse {
+      Unauthorized("No secret given")
+    }
   }
 
   def getTask(id: Long) = Action {
