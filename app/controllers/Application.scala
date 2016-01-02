@@ -63,5 +63,7 @@ Resolved TIMESTAMP,
 IsResolved BOOLEAN,
 ClientSecret VARCHAR(256) REFERENCES Secrets(ClientSecret)
 );
+
+INSERT INTO Secrets VALUES('test-1234', 'Test description for a test secret');
 */
 
