@@ -7,13 +7,20 @@ import play.api.Play.current
 
 import play.api.db._
 
+import play.api.libs.json._
+
 import play.api.data._
 import play.api.data.Forms._
 import scala.slick.driver.PostgresDriver.simple._
 import models.Secret
 import models.Secrets
+import models.RemoteTask
+import models.RemoteTasks
 
 object Application extends Controller {
+
+  case class TaskIds(result: Boolean, error: Option[String], ids: List[Long])
+  implicit val TaskIdsFormat = Json.format[TaskIds]
 
   def index = Action {
     Ok(views.html.index(null))
@@ -24,14 +31,11 @@ object Application extends Controller {
   }
 
   def getAllTaskIds = Action { request =>
-    request.headers.get("secret").map { secret =>
-      Secrets.find(secret) match {
-        case Some(s) => Ok("Hello " + s.description)
-        case None => NotFound("No such secret")
-      }
-    }.getOrElse {
-      Unauthorized("No secret given")
-    }
+    request.headers.get("secret").map(secret =>
+      Secrets.find(secret).map { s =>
+        Ok(Json.toJson(TaskIds(true, None, RemoteTasks.find(secret).map(t => t.id).toList)))
+      }.getOrElse(NotFound(Json.toJson(TaskIds(false, Some("No such secret"), List()))))
+    ).getOrElse (Unauthorized(Json.toJson(TaskIds(false, Some("No secret given"), List()))))
   }
 
   def getTask(id: Long) = Action {
@@ -45,7 +49,7 @@ object Application extends Controller {
       val stmt = conn.createStatement
 
       stmt.executeUpdate("CREATE TABLE Secrets (ClientSecret VARCHAR(256) UNIQUE NOT NULL, Description VARCHAR(1000) NOT NULL)")
-      stmt.executeUpdate("CREATE TABLE RemoteTask (URL VARCHAR(2000) NOT NULL, Created TIMESTAMP, Resolved TIMESTAMP, IsResolved BOOLEAN, ClientSecret VARCHAR(256) REFERENCES Secrets(ClientSecret))")
+      stmt.executeUpdate("CREATE TABLE RemoteTask (ID SERIAL PRIMARY KEY, URL VARCHAR(2000) NOT NULL, Created TIMESTAMP, Resolved TIMESTAMP, IsResolved BOOLEAN, ClientSecret VARCHAR(256) REFERENCES Secrets(ClientSecret))")
     } finally {
       conn.close()
     }
@@ -59,6 +63,7 @@ Description VARCHAR(1000) NOT NULL
 );
 
 CREATE TABLE RemoteTask (
+ID SERIAL PRIMARY KEY,
 URL VARCHAR(2000) NOT NULL,
 Created TIMESTAMP,
 Resolved TIMESTAMP,
