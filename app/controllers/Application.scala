@@ -23,10 +23,12 @@ object Application extends Controller {
     Ok(views.html.index("POST Task successfull"))
   }
 
-  def getAllTaskIds = Action(parse.json) { request =>
-    (request.body \ "secret").asOpt[String].map { secret =>
-      val desc = Secrets.find(secret).description
-      Ok("Hello " + desc)
+  def getAllTaskIds = Action { request =>
+    request.headers.get("secret").map { secret =>
+      Secrets.find(secret) match {
+        case Some(s) => Ok("Hello " + s.description)
+        case None => NotFound("No such secret")
+      }
     }.getOrElse {
       Unauthorized("No secret given")
     }
