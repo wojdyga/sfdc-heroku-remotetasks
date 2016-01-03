@@ -25,4 +25,8 @@ object RemoteTasks {
   def find(secret: String): Seq[RemoteTask] = db.withSession{ implicit session =>
     remoteTasks.filter(_.clientSecret === secret).run
   }
+
+  def get(secret: String, id: Long): Option[RemoteTask] = db.withSession{ implicit session =>
+    remoteTasks.filter(_.clientSecret === secret).filter(_.id === id).firstOption
+  }
 }

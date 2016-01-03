@@ -8,6 +8,7 @@ import play.api.Play.current
 import play.api.db._
 
 import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 import play.api.data._
 import play.api.data.Forms._
@@ -17,10 +18,20 @@ import models.Secrets
 import models.RemoteTask
 import models.RemoteTasks
 
+import java.sql.Timestamp
+
 object Application extends Controller {
 
   case class TaskIds(result: Boolean, error: Option[String], ids: List[Long])
   implicit val TaskIdsFormat = Json.format[TaskIds]
+
+  case class TaskReply(result: Boolean, error: Option[String], task: Option[RemoteTask])
+  implicit val rds: Reads[Timestamp] = (__ \ "time").read[Long].map{ long => new Timestamp(long) }
+  implicit val wrs: Writes[Timestamp] = (__ \ "time").write[Long].contramap{ (a: Timestamp) => a.getTime }
+  implicit val fmt: Format[Timestamp] = Format(rds, wrs)
+
+  implicit val RemoteTaskFormat = Json.format[RemoteTask]
+  implicit val TaskReplyFormat = Json.format[TaskReply]
 
   def index = Action {
     Ok(views.html.index(null))
@@ -38,8 +49,12 @@ object Application extends Controller {
     ).getOrElse (Unauthorized(Json.toJson(TaskIds(false, Some("No secret given"), List()))))
   }
 
-  def getTask(id: Long) = Action {
-    Ok(views.html.index("GET Task successfull"))
+  def getTask(id: Long) = Action { request =>
+    request.headers.get("secret").map(secret =>
+      RemoteTasks.get(secret, id).map( task =>
+        Ok(Json.toJson(TaskReply(true, None, Some(task))))
+      ).getOrElse(NotFound(Json.toJson(TaskReply(false, Some(s"No task found for id $id"), None))))
+    ).getOrElse (Unauthorized(Json.toJson(TaskReply(false, Some("No secret given"), None))))
   }
 
   def db = Action {
@@ -72,5 +87,8 @@ ClientSecret VARCHAR(256) REFERENCES Secrets(ClientSecret)
 );
 
 INSERT INTO Secrets VALUES('test-1234', 'Test description for a test secret');
+
+INSERT INTO RemoteTask(URL,Created,ClientSecret) VALUES ('https://www.apache.org/', NOW(), '1234-test');
+INSERT INTO RemoteTask(URL,Created,ClientSecret) VALUES ('https://www.google.com/', NOW(), '1234-test');
 */
 
