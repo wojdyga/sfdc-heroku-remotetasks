@@ -30,31 +30,57 @@ object Application extends Controller {
   implicit val wrs: Writes[Timestamp] = (__ \ "time").write[Long].contramap{ (a: Timestamp) => a.getTime }
   implicit val fmt: Format[Timestamp] = Format(rds, wrs)
 
+  implicit  val RemoteTaskReads: Reads[RemoteTask] = (
+    (__ \ "id").readNullable[Long] and
+    (__ \ "url").read[String] and
+    (__ \ "created").readNullable[Timestamp] and
+    (__ \ "resolved").readNullable[Timestamp] and
+    (__ \ "isResolved").readNullable[Boolean] and
+    (__ \ "clientSecret").readNullable[String]
+  )(RemoteTask)
   implicit val RemoteTaskFormat = Json.format[RemoteTask]
   implicit val TaskReplyFormat = Json.format[TaskReply]
+
+  case class TaskPost(result: Boolean, error: Option[String], taskid: Option[Long])
+  implicit val TaskPostFormat = Json.format[TaskPost]
 
   def index = Action {
     Ok(views.html.index(null))
   }
 
-  def postTask = Action {
-    Ok(views.html.index("POST Task successfull"))
+  def postTask = Action(parse.json) { request =>
+    request.headers.get("secret").map(secret =>
+      Secrets.find(secret).map { s =>
+        val inputTask = request.body.as[RemoteTask]
+        val insertTask = inputTask.copy(id = None, clientSecret = Some(secret))
+        Ok(Json.toJson(TaskPost(true, None, RemoteTasks.insert(insertTask))))
+      }.getOrElse(NotFound(Json.toJson(TaskPost(false, Some("No such secret"), None))))
+    ).getOrElse(Unauthorized(Json.toJson(TaskPost(false, Some("No secret given"), None))))
   }
 
   def getAllTaskIds = Action { request =>
     request.headers.get("secret").map(secret =>
       Secrets.find(secret).map { s =>
-        Ok(Json.toJson(TaskIds(true, None, RemoteTasks.find(secret).map(t => t.id).toList)))
+        Ok(Json.toJson(TaskIds(true, None, RemoteTasks.find(secret).map(t => t.id.get).toList)))
       }.getOrElse(NotFound(Json.toJson(TaskIds(false, Some("No such secret"), List()))))
     ).getOrElse (Unauthorized(Json.toJson(TaskIds(false, Some("No secret given"), List()))))
   }
 
-  def getTask(id: Long) = Action { request =>
+  def getTask(tid: Long) = Action { request =>
     request.headers.get("secret").map(secret =>
       RemoteTasks.get(secret, id).map( task =>
         Ok(Json.toJson(TaskReply(true, None, Some(task))))
       ).getOrElse(NotFound(Json.toJson(TaskReply(false, Some(s"No task found for id $id"), None))))
     ).getOrElse (Unauthorized(Json.toJson(TaskReply(false, Some("No secret given"), None))))
+  }
+
+  def putTask(tid: Long) = Action(parse.json) { request =>
+    request.headers.get("secret").map { secret =>
+      val inputTask = request.body.as[RemoteTask]
+      val updateTask = inputTask.copy(id = Some(tid), clientSecret = Some(secret))
+      RemoteTasks.update(updateTask, secret)
+      Ok(Json.toJson(true))
+    }.getOrElse (Unauthorized(Json.toJson(false)))
   }
 
   def db = Action {
