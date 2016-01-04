@@ -68,9 +68,9 @@ object Application extends Controller {
 
   def getTask(tid: Long) = Action { request =>
     request.headers.get("secret").map(secret =>
-      RemoteTasks.get(secret, id).map( task =>
+      RemoteTasks.get(secret, tid).map( task =>
         Ok(Json.toJson(TaskReply(true, None, Some(task))))
-      ).getOrElse(NotFound(Json.toJson(TaskReply(false, Some(s"No task found for id $id"), None))))
+      ).getOrElse(NotFound(Json.toJson(TaskReply(false, Some(s"No task found for id $tid"), None))))
     ).getOrElse (Unauthorized(Json.toJson(TaskReply(false, Some("No secret given"), None))))
   }
 
@@ -97,24 +97,3 @@ object Application extends Controller {
     Ok(out)
   }
 }
-/*
-CREATE TABLE Secrets (
-ClientSecret VARCHAR(256) UNIQUE NOT NULL,
-Description VARCHAR(1000) NOT NULL
-);
-
-CREATE TABLE RemoteTask (
-ID SERIAL PRIMARY KEY,
-URL VARCHAR(2000) NOT NULL,
-Created TIMESTAMP,
-Resolved TIMESTAMP,
-IsResolved BOOLEAN,
-ClientSecret VARCHAR(256) REFERENCES Secrets(ClientSecret)
-);
-
-INSERT INTO Secrets VALUES('test-1234', 'Test description for a test secret');
-
-INSERT INTO RemoteTask(URL,Created,ClientSecret) VALUES ('https://www.apache.org/', NOW(), '1234-test');
-INSERT INTO RemoteTask(URL,Created,ClientSecret) VALUES ('https://www.google.com/', NOW(), '1234-test');
-*/
-

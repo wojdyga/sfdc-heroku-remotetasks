@@ -2,18 +2,75 @@
 
 @main("GettingStarted") {
 
+<script>
+function output(id, inp) {
+    document.getElementById(id).appendChild(document.createElement('pre')).innerHTML = inp;
+}
+
+function syntaxHighlight(json) {
+    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+        var cls = 'number';
+        if (/^"/.test(match)) {
+            if (/:$/.test(match)) {
+                cls = 'key';
+            } else {
+                cls = 'string';
+            }
+        } else if (/true|false/.test(match)) {
+            cls = 'boolean';
+        } else if (/null/.test(match)) {
+            cls = 'null';
+        }
+        return '<span class="' + cls + '">' + match + '</span>';
+    });
+}
+</script>
 <div class="jumbotron text-center">
   <div class="container">
     <a href="/" class="lang-logo">
       <img src="@routes.Assets.at("images/lang-logo.png")">
     </a>
     <h1>Remote Tasks</h1>
+    <p>Training app for TTMS Salesforce Academy</p>
   </div>
 </div>
 <div class="container">
    <div class="alert alert-info text-center" role="alert">
-    Connect to this app from your SFDC org
+    Deploy this app to your Heroku account, confgure your SFDC org and connect via REST to the app
   </div>
+  <h2>Heroku app configuration</h2>
+  <p>
+    This app requires postgresql database as a Heroku addon. Run <code>1.sql</code> and <code>2.sql</code> on your Heroku postgresql instance - use the<code>pg:psql</code> command. These scripts create tables and insert sample data.
+  </p>
+  <h2>Endpoints to connect to from your SFDC app</h2>
+  <p>
+    Pass the authorization secret in header named "secret". Insert this value on Heroku instance as shown in <code>2.sql</code>.
+    <ul class="list-group">
+      <li class="list-group-item"><code>POST    /tasks</code>
+        <p id="post-tasks">This endpoint is for creating (inserting) tasks. Sample JSON input below.</p>
+        <script>
+            var obj = { "url": "http://www.yahoo.com/", "isResolved" : true, "resolved" : { "time": 1451942632000 }, "created": { "time": 1449922332000 } };
+            var str = JSON.stringify(obj, null, 2);
+            output("post-tasks", syntaxHighlight(str));
+        </script>
+      </li>
+      <li class="list-group-item"><code>GET     /tasks/all</code>
+          <p id="get-all">This endpoint receives all task IDs for the current SFDC app.</p>
+      </li>
+      <li class="list-group-item"><code>GET     /tasks/:tid</code>
+          <p id="get-task">This endpoint returns all task data fot a given task ID</p>
+      </li>
+      <li class="list-group-item"><code>PUT     /tasks/:tid</code>
+        <p id="put-task">This endpoint is for updating a task. Sample JSON input below.</p>
+          <script>
+            var obj = { "id": 3, "url": "http://www.typesafe.com/", "created": { "time": 1449922332000 }, "isResolved": true, "resolved": { "time": 1451949632000 } };
+            var str = JSON.stringify(obj, null, 2);
+            output("put-task", syntaxHighlight(str));
+          </script>
+      </li>
+    </ul>
+  </p>
   @if(message != null){
   <div class="alert alert-success text-center" role="alert">
     @message
