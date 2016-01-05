@@ -44,6 +44,9 @@ object Application extends Controller {
   case class TaskPost(result: Boolean, error: Option[String], taskid: Option[Long])
   implicit val TaskPostFormat = Json.format[TaskPost]
 
+  case class PutReply(result: Boolean)
+  implicit val PutReplyFormat = Json.format[PutReply]
+
   def index = Action {
     Ok(views.html.index(null))
   }
@@ -78,8 +81,8 @@ object Application extends Controller {
     request.headers.get("secret").map { secret =>
       val inputTask = request.body.as[RemoteTask]
       val updateTask = inputTask.copy(id = Some(tid), clientSecret = Some(secret))
-      RemoteTasks.update(updateTask, secret)
-      Ok(Json.toJson(true))
+      val result = RemoteTasks.update(updateTask, secret)
+      Ok(Json.toJson(PutReply(result)))
     }.getOrElse (Unauthorized(Json.toJson(false)))
   }
 
