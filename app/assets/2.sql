@@ -7,5 +7,5 @@ IsResolved BOOLEAN,
 ClientSecret VARCHAR(256) REFERENCES Secrets(ClientSecret)
 );
 
-INSERT INTO RemoteTask(URL,Created,ClientSecret) VALUES ('https://www.apache.org/', NOW(), '1234-test');
-INSERT INTO RemoteTask(URL,Created,ClientSecret) VALUES ('https://www.google.com/', NOW(), '1234-test');
+INSERT INTO RemoteTask(URL,Created,ClientSecret) VALUES ('https://www.apache.org/', NOW(), 'test-1234');
+INSERT INTO RemoteTask(URL,Created,ClientSecret) VALUES ('https://www.google.com/', NOW(), 'test-1234');
